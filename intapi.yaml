@@ -14,23 +14,11 @@ spec:
     spec:
       containers:
       - name: intapi
-        image: lidorabo/docker_repo:intapi_1.0.1
+        image: lidorabo/docker_repo:intapi_{{version}}
         ports:
         - containerPort: 3000
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: intapi-app
-  name: intapi-svc
-  namespace: default
-spec:
-  type: NodePort    # use LoadBalancer as type here
-  externalIPs:
-     - 10.0.2.141
-  ports:
-    - port: 3000
-      nodePort: 30002
-  selector:
-    app: intapi-app
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+

@@ -8,6 +8,7 @@ def colons = ':'
 def module = 'intapi'
 def underscore = '_'
 def path_json_file
+def deployment_name = 'intapi-deployment'
 pipeline {
 
     options {
@@ -28,10 +29,29 @@ pipeline {
                     dir('Deployment') {
                         deleteDir()
                         checkout([$class: 'GitSCM', branches: [[name: 'master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'git-cred', url: "https://github.com/lidorabo/INT_API_CD.git"]]])
-                        echo Current_version
+
                     }
 
 
+                }
+            }
+        }
+        stage('Deployment with Kubernetes'){
+            steps{
+                script{
+                    dir('Deployment'){
+                       sh "sed -i 's/{{version}}/$Current_version/' intapi.yaml"
+                        sh """
+                               export PATH=/bin/bash:$PATH
+                               export KUBECONFIG=/var/jenkins_home/admin.conf
+                               kubectl apply -f intapi.yaml
+                                kubectl patch deployment $deployment_name -p '{"spec":{"progressDeadlineSeconds":10}}'
+                                if ! kubectl rollout status deployment $deployment_name;
+                                    then
+                                        kubectl rollout undo deployment $deployment_name
+                                fi
+                            """
+                    }
                 }
             }
         }
