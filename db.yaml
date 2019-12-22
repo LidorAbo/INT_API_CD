@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intdb-deployment
+spec:
+  selector:
+    matchLabels:
+      app: intdb-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: intdb-app
+    spec:
+      containers:
+      - name: intdb
+        image: lidorabo/docker_repo:int_db
+        ports:
+        - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: intdb-app
+  name: intdb-svc
+  namespace: default
+spec:
+  type: NodePort    # use LoadBalancer as type here
+  ports:
+    - port: 27017
+      nodePort: 30001
+  selector:
+    app: intdb-app
